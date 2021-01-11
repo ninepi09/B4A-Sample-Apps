@@ -1,0 +1,193 @@
+﻿Build1=Default,b4a.example
+File1=dashboard.bal
+File2=Login.bal
+File3=logo_pemko.png
+File4=regis.bal
+FileGroup1=Default Group
+FileGroup2=Default Group
+FileGroup3=Default Group
+FileGroup4=Default Group
+Group=Default Group
+Library1=core
+Library2=xui
+Library3=ahpreferenceactivity
+Library4=okhttputils2
+Library5=ss_base64convert
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="29"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+Module1=Dashboard
+Module2=Register
+Module3=Starter
+NumberOfFiles=4
+NumberOfLibraries=5
+NumberOfModules=3
+Version=10.2
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: B4A Example
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Private xui As XUI
+	Dim manager As AHPreferenceManager
+	Dim ipServer As String = "https://yukmarry.com/tertandaid/tertanda/"
+End Sub
+
+Sub Globals
+	'These global variables will be redeclared each time the activity is created.
+	Private emailET As EditText
+	Private passwordET As EditText
+	Private loginButt As Button
+	Private regisButt As Button
+	
+	'Shared Preference in b4a
+	
+	Private CheckBox1 As CheckBox
+	
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Set Layout
+	Activity.LoadLayout("Login")
+	
+	'Set title for this activity
+	Activity.Title = "Login"
+	Log("email : " & emailET.text)
+	Log("email : " & passwordET.text)
+	
+	'Cek login session
+	CheckLoginSession
+	
+End Sub
+
+Sub CheckLoginSession()
+	Dim isLogin As Boolean
+	isLogin = manager.GetBoolean("is_login")
+	
+	If isLogin Then
+		StartActivity(Dashboard)
+		Activity.Finish
+	End If
+End Sub
+
+Sub InputLogin
+	
+	ShowLoading("Loading...")
+	
+	Dim userEmail As String
+	userEmail = emailET.text
+	Dim password As String
+	password = passwordET.text
+	
+	Log("email :" & userEmail)
+	Log("pass :" & password)
+	
+	Dim data As Map
+	data.Initialize
+	data.Put("email", emailET.Text)
+	data.Put("password", passwordET.Text)
+	
+	postAPI(data)
+	
+
+End Sub
+
+Sub ShowLoading(msg As String)
+	ProgressDialogShow2(msg,False)
+End Sub
+
+Sub JobDone(job As HttpJob)
+	
+	
+	If job.SUCCESS Then
+		Dim Res As String
+		Res = job.GetString
+		Log("Response from server: " & Res)
+		
+		StartActivity(Dashboard)
+		Activity.Finish
+	Else
+		ToastMessageShow("Gagal Login: " & job.ErrorMessage, True)
+	End If
+	job.Release
+		
+	
+End Sub
+
+Sub postAPI(dataMap As Map)
+	
+	ProgressDialogHide
+	
+	Dim job As HttpJob
+	job.Initialize("login", Me)
+	Dim path As String = "UserLogin3.php"
+	
+	Dim myLink As String = ipServer  & path
+	job.PostMultipart(myLink,dataMap,Null)
+
+	job.GetRequest.Timeout = 15000
+	
+End Sub
+
+
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+Sub SetLoginSession(Checked As Boolean)
+	If Checked Then
+		manager.SetBoolean("is_login", True)
+	Else
+		manager.SetBoolean("is_login", False)
+	End If
+End Sub
+
+Sub loginButt_Click
+	
+	
+	Dim strUsername As String = emailET.Text.Trim
+	If strUsername = "" Then
+		ToastMessageShow("Please enter User Email", "Error")
+		Return
+	End If
+	Dim strPassword As String = passwordET.Text.Trim
+	If strPassword = "" Then
+		ToastMessageShow("Please enter Password", "Error")
+		Return
+	End If
+	
+	InputLogin
+	'Set login session
+	If CheckBox1.Checked Then
+		SetLoginSession(True)
+	Else
+		SetLoginSession(False)
+	End If
+			
+	'StartActivity(Dashboard)
+	'Activity.Finish
+	
+End Sub
+
+Sub regisButt_Click
+	StartActivity(Register)
+End Sub
+
+Sub CheckBox1_CheckedChange(Checked As Boolean)
+	
+End Sub
